@@ -33,6 +33,7 @@
 import Foundation
 import BridgeClient
 
+/// A codable list of privacy notice items grouped by ``Category``.
 public struct PrivacyNotice : Codable, Hashable {
     
     public let notices: [Item]
@@ -40,8 +41,11 @@ public struct PrivacyNotice : Codable, Hashable {
     public struct Item : Codable, Hashable, Identifiable {
         public var id: String { icon }
         
+        /// The  category for the item.
         public let category: Category
+        /// The name of the image asset (defined within this module) to show for this item.
         public let icon: String
+        /// The description text to show for this item.
         public let text: String
     }
     
@@ -55,7 +59,9 @@ public struct PrivacyNotice : Codable, Hashable {
     }()
 }
 
-extension AppConfig {
+extension AppConfigObserver {
+    /// By default, the ``PrivacyNotice`` is the same for all studies supported by a given app and is defined
+    /// as a `ConfigElement` in Bridge with the identifier "PrivacyNotice".
     func decodePrivacyNotice() -> PrivacyNotice? {
         do {
             guard let data = self.configElementJson(identifier: "PrivacyNotice")

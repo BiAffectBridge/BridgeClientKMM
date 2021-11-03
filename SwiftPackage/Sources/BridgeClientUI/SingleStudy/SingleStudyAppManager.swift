@@ -1,5 +1,5 @@
 //
-//  StudyInfoViewModel.swift
+//  SingleStudyAppManager.swift
 //
 //  Copyright © 2021 Sage Bionetworks. All rights reserved.
 //
@@ -31,131 +31,118 @@
 //
 
 import SwiftUI
-import SharedMobileUI
 import BridgeClient
 
-open class StudyInfoViewModel : ObservableObject {
+fileprivate let kStudyIdKey = "studyId"
+
+/// An app manager that can be used with apps that require participants to be signed in to a single study
+/// at a time. The timeline and history for a participant are calculated for a given study. While they *could*
+/// be part of more than one study, only one study is the "main" study that is tracked for these kinds of
+/// events.
+public final class SingleStudyAppManager : BridgeClientAppManager {
     
-    @Published open var study: Study! {
+    /// The identifier of the current study.
+    public var studyId: String? {
+        study?.identifier
+    }
+    
+    /// The study is an observer that can be populated and/or updated with either a `BridgeClient.StudyInfo`
+    /// object or a `BridgeClient.Study` object. This object is threadsafe and observable.
+    @Published public var study: StudyObserver? {
         didSet {
-            updateInfo()
+            UserDefaults.standard.set(study?.id, forKey: kStudyIdKey)
         }
     }
     
-    @Published open var institutionName: String = ""
-    @Published open var studyLogoUrl: String?
-    @Published open var foregroundColor: Color = .textForeground
-    @Published open var backgroundColor: Color = .clear
-    @Published open var title: String = ""
-    @Published open var details: String?
-    @Published open var supportContacts: [StudyContact] = []
-    @Published open var irbContacts: [StudyContact] = []
-    @Published open var studyContacts: [StudyContact] = []
+    /// Has the participant "completed" this study?
+    @Published public var isStudyComplete: Bool = false
     
-    @Published open var participantPhone: Phone?
-    @Published open var participantId: String?
-    
-    public init(isPreview: Bool = false) {
-        if isPreview {
-            self.study = previewStudy
-            self.participantId = "123456"
-            updateInfo()
-        }
+    override func didUpdateUserSessionInfo() {
+        super.didUpdateUserSessionInfo()
+        updateStudy()
     }
 
-    // MARK: Set up
-    
-    open func onAppear(_ bridgeManager: SingleStudyAppManager) {
-        guard let study = bridgeManager.study ?? (bridgeManager.isPreview ? previewStudy : nil)
-        else {
-            return
-        }
-        self.study = study
-        self.participantPhone = bridgeManager.userSessionInfo?.phone
-        self.participantId = bridgeManager.userSessionInfo?.participantId(for: study.identifier) ?? (bridgeManager.isPreview ? "123456" : nil)
-        updateInfo()
-    }
-    
-    open func updateInfo() {
-        self.title = study.name
-        self.details = study.details
-        self.studyLogoUrl = study.studyLogoUrl
-        
-        if let hex = study.colorScheme?.foreground,
-           let color = Color.init(hex: hex) {
-            self.foregroundColor = color
-        }
-        
-        if let hex = study.colorScheme?.background,
-           let color = Color.init(hex: hex) {
-            self.backgroundColor = color
-        }
-           
-        guard let contacts = study.contacts
-        else {
-            return
-        }
-        
-        self.irbContacts = contacts.compactMap { contact in
-            guard contact.role == .irb else { return nil }
-            return StudyContact(contact)
-        }
-        self.supportContacts = contacts.compactMap { contact in
-            guard contact.role == .studySupport else { return nil }
-            return StudyContact(contact)
-        }
-        
-        let studyRoles: [ContactRole] = [.principalInvestigator, .investigator, .sponsor]
-        let studyContacts = contacts
-            .filter { studyRoles.contains($0.role) }
-            .sorted(by: { studyRoles.firstIndex(of: $0.role)! < studyRoles.firstIndex(of: $1.role)! })
-        
-        guard let firstContact = studyContacts.first(where: { $0.affiliation != nil })
-        else {
-            return
-        }
-        
-        self.institutionName = firstContact.affiliation!
-        self.studyContacts = studyContacts.map { StudyContact($0) }
-        self.studyContacts.insert(StudyContact(name: self.institutionName, position: Text("Institution")), at: 1)
-    }
-}
+    private var studyManager: NativeStudyManager?
 
-public struct StudyContact : Identifiable {
-    public var id: String { "\(name)|\(position)" }
-    public let name: String
-    public let position: Text
-    public let phone: String?
-    public let email: String?
-    public let isIRB: Bool
-    
-    public init(_ contact: BridgeClient.Contact) {
-        self.name = contact.name
-        self.position = contact.position.map { Text($0) } ?? {
-            switch contact.role {
-            case .investigator:
-                return Text("Investigator")
-            case .irb:
-                return Text("IRB/Ethics Board of Record")
-            case .principalInvestigator:
-                return Text("Principal Investigator")
-            case .sponsor:
-                return Text("Funder")
-            default:
-                return Text("Study Support")
-            }
-        }()
-        self.email = contact.email
-        self.phone = contact.phone.map { $0.nationalFormat ?? $0.number }
-        self.isIRB = (contact.role == .irb)
+    public override init(platformConfig: IOSPlatformConfig, pemPath: String? = nil) {
+        super.init(platformConfig: platformConfig, pemPath: pemPath)
+        let studyId = self.isPreview ? previewStudy.identifier : UserDefaults.standard.string(forKey: kStudyIdKey)
+        self.study = studyId.map { .init(identifier: $0) }
+        if self.isPreview {
+            self.study?.update(from: previewStudy)
+        }
     }
     
-    public init(name: String, position: Text, phone: String? = nil, email: String? = nil, isIRB: Bool = false) {
-        self.name = name
-        self.position = position
-        self.email = email
-        self.phone = phone
-        self.isIRB = isIRB
+    public override func appWillFinishLaunching(_ launchOptions: [UIApplication.LaunchOptionsKey : Any]?) {
+        super.appWillFinishLaunching(launchOptions)
+        updateStudy()
+    }
+    
+    public override func signOut() {
+        try? studyManager?.onCleared()
+        studyManager = nil
+        study = nil
+        observedStudyId = nil
+        super.signOut()
+    }
+    
+    private var observedStudyId: String?
+    
+    private func updateStudy() {
+        // Only update if the user is authenticated.
+        guard userSessionInfo.isAuthenticated, userSessionInfo.studyIds.count > 0
+        else {
+            return
+        }
+        
+        // Check that something has changed which means that we need to
+        // reset the study observer.
+        let studyIds = userSessionInfo.studyIds
+        let previousStudyId = observedStudyId
+        var studyId = study?.id
+        if studyId == nil || !studyIds.contains(studyId!) {
+            studyId = studyIds.first
+        }
+        guard let studyId = studyId,
+                (studyId != previousStudyId || study?.id != studyId || studyManager == nil)
+        else {
+            return
+        }
+        
+        // If the study observer is nil or does not match the identifier
+        // of the study to observe, then initialize a new one.
+        if self.study?.id != studyId {
+            self.study = .init(identifier: studyId)
+        }
+
+        // Set up an observer for changes to the study.
+        try? studyManager?.onCleared()
+        self.observedStudyId = studyId
+        self.studyManager = .init(studyId: studyId) { study in
+            self.study?.update(from: study)
+        }
+        self.studyManager!.observeStudy()
+    }
+    
+    override func updateAppState() {
+        if appConfig.isLaunching {
+            appState = .launching
+        }
+        else if !userSessionInfo.isAuthenticated {
+            appState = .login
+        }
+        else if study == nil {
+            // syoung 09/14/2021 On iOS 14.4, SwiftUI is not recognizing and updating on
+            // changes to the study object and is hanging on the launch screen. Instead,
+            // use the `appState` published property to manage the state of the root view.
+            appState = .launching
+        }
+        else if !isOnboardingFinished {
+            appState = .onboarding
+        }
+        else {
+            appState = .main
+        }
     }
 }
 
@@ -223,4 +210,3 @@ let previewContacts = [
             jurisdiction: nil,
             type: "Contact"),
 ]
-
