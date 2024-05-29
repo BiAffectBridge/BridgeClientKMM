@@ -29,12 +29,12 @@ let package = Package(
     dependencies: [
         // Dependencies declare other packages that this package depends on.
         // .package(url: /* package url */, from: "1.0.0"),
-        .package(url: "https://github.com/BridgeDigitalHealth/BridgeArchiver-Swift.git",
-                 from: "0.3.0"),
-        .package(url: "https://github.com/BridgeDigitalHealth/JsonModel-Swift.git",
-                 from: "2.0.0"),
-        .package(url: "https://github.com/BridgeDigitalHealth/AssessmentModelKMM.git",
-                 from: "1.0.0"),
+        .package(url: "https://github.com/BiAffectBridge/BridgeArchiver-Swift.git",
+                 from: "0.4.0"),
+        .package(url: "https://github.com/BiAffectBridge/JsonModel-Swift.git",
+                 from: "2.2.0"),
+        .package(url: "https://github.com/BiAffectBridge/AssessmentModelKMM.git",
+                 from: "1.2.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
