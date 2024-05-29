@@ -19,6 +19,8 @@ class IntegrationSmokeTest: AbstractBaseIntegrationTest() {
     private val activityEventsRepo by inject<ActivityEventsRepo>()
     private val assessmentConfigRepo by inject<AssessmentConfigRepo>()
 
+/* TODO: syoung 05/28/2024 Comment out the smoke test that requires connection to services
+ *
 
     @Test
     fun testIntegrationSmokeTest() {
@@ -65,6 +67,6 @@ class IntegrationSmokeTest: AbstractBaseIntegrationTest() {
 
         }
     }
-
+*/
 
 }

@@ -19,8 +19,8 @@ jobs:
       with:
         java-version: 17
     - name: Check BridgeClient
-      env:
-        testExternalId01: ${{ secrets.TEST_EXTERNAL_ID_01 }}
+#      env:
+#        testExternalId01: ${{ secrets.TEST_EXTERNAL_ID_01 }}
       run: ./gradlew check
     - name: Publish Unit Test Results
       uses: EnricoMi/publish-unit-test-result-action/composite@v1
@@ -31,5 +31,5 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: Test-Reports
-        path: assessmentmodel-sdk/build/reports
+        path: bridgeclient-sdk/build/reports
       if: always()
