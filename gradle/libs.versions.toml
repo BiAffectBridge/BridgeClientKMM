@@ -39,7 +39,7 @@ coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", ve
 coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 
 gradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
-gradlePlugin-android = "com.android.tools.build:gradle:8.1.2"
+gradlePlugin-android = "com.android.tools.build:gradle:8.2.0"
 gradlePlugin-kotlinSerialization = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }
 gradlePlugin-sqlDelight = { module = "app.cash.sqldelight:gradle-plugin", version.ref = "sqlDelight" }
 #gradlePlugin-kover = { module = "org.jetbrains.kotlinx:kover", version.ref = "kover" }
