@@ -1,23 +1,19 @@
 # BridgeClientKMM
 A Kotlin Multiplatform Mobile [Bridge](https://developer.sagebridge.org/index.html) client based on a repository design pattern, built using Kotlin Serialization, Ktor, and Sqldelight.
 
-[Class Documentation](https://BridgeDigitalHealth.github.io/BridgeClientKMM/)
-#### Android
+#### iOS
 
-Kotlin DSL:
+For iOS applications, directly add the [Swift Package](https://github.com/BiAffectBridge/BridgeClient-Swift.git) which contains the binary built by this project as well as the native Swift code used to support access to Bridge on iOS.
 
-```kotlin
-repositories {
-    maven(url = "https://sagebionetworks.jfrog.io/artifactory/mobile-sdks/")
-}
+To build the binaries, you can run the script:
 
-dependencies {
-    //Core library
-    implementation("org.sagebionetworks.bridge.kmm:bridge-client:0.3.2")
-    //Support for archiving results from AssessmentModelKMM
-    implementation("org.sagebionetworks.bridge.kmm:assessmentmodel-sdk:0.3.2")
-}
 ```
+./xcframework_build.sh
+```
+
+This script assumes that the [Swift Package](https://github.com/BiAffectBridge/BridgeClient-Swift.git) repo is in a parallel directory and will copy the files to that directories's binary path. The script intentionally does not tag, commit, create branches, etc. You should build the swift package and run unit tests locally before pushing changes to the remote repo.
+
+#### Android
 
 BridgeClientKMM uses Koin for dependency injection and should be initialized as shown below:
 ```kotlin
@@ -38,6 +34,3 @@ class ExampleApplication : MultiDexApplication(), KoinComponent {
 ```
 To support encrypting uploads, place your study_public_key.pem in your app's assets directory.
 
-## License
-
-BridgeClientKMM is available under the [Commons Clause and BSD 3-clause](LICENSE) licenses.
