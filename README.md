@@ -1,6 +1,8 @@
 # BridgeClientKMM
 A Kotlin Multiplatform Mobile [Bridge](https://developer.sagebridge.org/index.html) client based on a repository design pattern, built using Kotlin Serialization, Ktor, and Sqldelight.
 
+**Note: This framework will need to be built with "sagebridge" replaced by "biaffectbridge" in order to point at the services owned by BiAffect. - syoung 08/07/2024**
+
 #### iOS
 
 For iOS applications, directly add the [Swift Package](https://github.com/BiAffectBridge/BridgeClient-Swift.git) which contains the binary built by this project as well as the native Swift code used to support access to Bridge on iOS.
