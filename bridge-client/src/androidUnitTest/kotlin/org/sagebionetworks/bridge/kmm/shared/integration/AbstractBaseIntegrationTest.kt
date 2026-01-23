@@ -59,9 +59,9 @@ abstract class AbstractBaseIntegrationTest: BaseTest(), KoinTest {
 
     class TestBridgeConfig: BridgeConfig {
         override val appId: String
-            get() = "bridge-client-kmm-integration"
+            get() = "bckmm-int-test"
         override val appName: String
-            get() = "BridgeClientKMM Integration Tests"
+            get() = "BridgeClientKMM Integration Test Study"
         override val sdkVersion: Int
             get() = 1
         override val appVersion: Int
@@ -73,7 +73,7 @@ abstract class AbstractBaseIntegrationTest: BaseTest(), KoinTest {
         override val osName: String
             get() = "Android Integration Test"
         override val cacheCredentials: Boolean
-            get() = true
+            get() = false
         override val osVersion: String
             get() = "Android Integration Test"
         override val deviceName: String
