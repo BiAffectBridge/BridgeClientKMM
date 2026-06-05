@@ -24,7 +24,8 @@ interface PlatformConfig {
 
         fun basePath(): String {
             // return "https://webservices${domainSuffix()}.sagebridge.org"
-            return "https://bridge-uat.grip-research.org"
+            // return "https://bridge-uat.grip-research.org"
+            return "https://bridge.grip-research.org"
         }
     }
 

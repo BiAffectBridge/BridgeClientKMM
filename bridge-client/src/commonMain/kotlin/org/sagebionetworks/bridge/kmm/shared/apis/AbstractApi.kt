@@ -9,8 +9,13 @@ import io.ktor.http.*
 abstract class AbstractApi(val basePath: String, val httpClient: HttpClient) {
 
     companion object {
-        const val BASE_PATH = "https://bridge-uat.grip-research.org"
-        const val BRIDGE_SERVER_CHECK = "bridge-uat.grip-research"
+        // Production
+        const val BASE_PATH = "https://bridge.grip-research.org"
+        const val BRIDGE_SERVER_CHECK = "bridge.grip-research.org"
+
+        // UAT
+        // const val BASE_PATH = "https://bridge-uat.grip-research.org"
+        // const val BRIDGE_SERVER_CHECK = "bridge-uat.grip-research"
         
         // Original Links
         // const val BASE_PATH = "https://webservices.sagebridge.org"
